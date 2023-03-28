@@ -31,6 +31,9 @@ import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
+import org.apache.maven.shared.transfer.artifact.resolve.ArtifactResolver;
+import org.apache.maven.shared.transfer.artifact.resolve.ArtifactResolverException;
+import org.apache.maven.shared.transfer.artifact.resolve.ArtifactResult;
 
 import com.github.nfalco79.maven.dependency.graph.BottomUpDependencyVisitor;
 import com.github.nfalco79.maven.dependency.graph.DependencyGraphSession;
@@ -45,10 +48,11 @@ public class DependencyResolver {
     private DependencyGraphBuilder dependencyGraphBuilder;
     private ArtifactFilter filter;
     private Log logger;
+    private ArtifactResolver artifactResolver;
 
     /**
      * Create a new instance for a maven project.
-     * 
+     *
      * @param session
      *            the Maven Session
      * @param project
@@ -59,19 +63,22 @@ public class DependencyResolver {
      *            the filter for the artifact in the dependency graph
      * @param logger
      *            the output logger
+     * @param artifactResolver
+     *            artifact file resolver
      */
-    public DependencyResolver(MavenSession session, MavenProject project, DependencyGraphBuilder dependencyGraphBuilder, ArtifactFilter filter, Log logger) {
+    public DependencyResolver(MavenSession session, MavenProject project, DependencyGraphBuilder dependencyGraphBuilder, ArtifactFilter filter, Log logger, ArtifactResolver artifactResolver) {
         super();
         this.session = session;
         this.project = project;
         this.dependencyGraphBuilder = dependencyGraphBuilder;
         this.filter = filter;
         this.logger = logger;
+        this.artifactResolver = artifactResolver;
     }
 
     /**
      * Resolve and validate all dependencies of the project attempting a given number of time
-     * 
+     *
      * @param maxAttempts
      *            the number of attempts to resolve dependencies in case of wrong artifact file format
      * @return the dependency node after applying the artifact filter
@@ -83,7 +90,7 @@ public class DependencyResolver {
             throw new IllegalArgumentException("maxAttempts must be greater than 1");
         }
         int count = maxAttempts;
-        EmptyArtifactException failure = new EmptyArtifactException("Acme");
+        EmptyArtifactException failure = new EmptyArtifactException();
         while (count-- > 0) {
             try {
                 return resolveDependencies();
@@ -96,7 +103,7 @@ public class DependencyResolver {
 
     /**
      * Resolve and validate all dependencies of the project.
-     * 
+     *
      * @return the dependency node after applying the artifact filter
      * @throws DependencyGraphBuilderException
      *             in case of error building the dependency graph
@@ -119,13 +126,13 @@ public class DependencyResolver {
             for (Artifact artifact : artifacts) {
                 File artifactFile = artifact.getFile();
                 if (artifactFile == null) {
-                    getLogger().warn("The artifact file is null for artifact " + artifact);
+                    resolveArtifact(artifact);
                     continue;
                 }
 
                 if (artifactFile.length() == 0) {
                     removeResolvedArtifact(artifact);
-                    throw new EmptyArtifactException("Fail to download artifact " + artifact.toString() + ", size is 0");
+                    throw new EmptyArtifactException(artifact);
                 }
             }
             return rootNode;
@@ -134,16 +141,26 @@ public class DependencyResolver {
         }
     }
 
+    private void resolveArtifact(Artifact artifact) throws DependencyGraphBuilderException {
+        try {
+            ArtifactResult result = artifactResolver.resolveArtifact(getSession().getProjectBuildingRequest(), artifact);
+            artifact.setFile(result.getArtifact().getFile());
+        } catch (IllegalArgumentException | ArtifactResolverException e) {
+            throw new DependencyGraphBuilderException("can not resolve artifact " + artifact.toString(), e);
+        }
+    }
+
     protected void removeResolvedArtifact(Artifact artifact) throws IOException {
         File artifactFile = artifact.getFile();
         if (artifactFile != null) {
+            // retry to download artifact next resolution time
             FileUtils.deleteDirectory(artifactFile.getParentFile());
         }
     }
 
     /**
      * The Maven session.
-     * 
+     *
      * @return the Maven session
      */
     public MavenSession getSession() {
@@ -152,7 +169,7 @@ public class DependencyResolver {
 
     /**
      * Set the Maven session.
-     * 
+     *
      * @param session
      *            the Maven session to set
      */
@@ -162,7 +179,7 @@ public class DependencyResolver {
 
     /**
      * The Maven project.
-     * 
+     *
      * @return the Maven project
      */
     public MavenProject getProject() {
@@ -171,7 +188,7 @@ public class DependencyResolver {
 
     /**
      * Set the Maven project.
-     * 
+     *
      * @param project
      *            the Maven project to set
      */
@@ -181,7 +198,7 @@ public class DependencyResolver {
 
     /**
      * The builder of the dependency graph.
-     * 
+     *
      * @return the builder of the dependency graph
      */
     public DependencyGraphBuilder getDependencyGraphBuilder() {
@@ -190,7 +207,7 @@ public class DependencyResolver {
 
     /**
      * Set the builder of the dependency graph.
-     * 
+     *
      * @param dependencyGraphBuilder
      *            the builder of the dependency graph to set
      */
@@ -200,7 +217,7 @@ public class DependencyResolver {
 
     /**
      * The filter for the artifact in the dependency graph.
-     * 
+     *
      * @return the filter for the artifact in the dependency graph
      */
     public ArtifactFilter getFilter() {
@@ -209,7 +226,7 @@ public class DependencyResolver {
 
     /**
      * Set the filter for the artifact in the dependency graph.
-     * 
+     *
      * @param filter
      *            the filter for the artifact in the dependency graph to set
      */
@@ -219,7 +236,7 @@ public class DependencyResolver {
 
     /**
      * The output logger.
-     * 
+     *
      * @return the outputlogger
      */
     public Log getLogger() {
@@ -228,7 +245,7 @@ public class DependencyResolver {
 
     /**
      * Set the output logger.
-     * 
+     *
      * @param logger
      *            the output logger to set
      */

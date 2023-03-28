@@ -43,6 +43,7 @@ import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.apache.maven.shared.dependency.graph.internal.DefaultDependencyNode;
+import org.apache.maven.shared.transfer.artifact.resolve.ArtifactResolver;
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
@@ -67,7 +68,7 @@ public class DependencyResolverTest {
         rootNode.getChildren().forEach(n -> ((DefaultDependencyNode) n).setChildren(Collections.emptyList()));
 
         DependencyResolver resolver = new DependencyResolver(buildMavenSession(mavenProject), mavenProject, buildGraphBuilder(rootNode), new TypeFiler("jar"),
-                mock(Log.class));
+                mock(Log.class), mock(ArtifactResolver.class));
 
         int maxAttempts = 1;
         DependencyNode resultNode = resolver.resolveDependencies(maxAttempts);
@@ -88,7 +89,7 @@ public class DependencyResolverTest {
         rootNode.getChildren().forEach(n -> ((DefaultDependencyNode) n).setChildren(Collections.emptyList()));
 
         DependencyResolver resolver = spy(
-                new DependencyResolver(buildMavenSession(mavenProject), mavenProject, buildGraphBuilder(rootNode), new TypeFiler("jar"), mock(Log.class)));
+                new DependencyResolver(buildMavenSession(mavenProject), mavenProject, buildGraphBuilder(rootNode), new TypeFiler("jar"), mock(Log.class), mock(ArtifactResolver.class)));
         doNothing().when(resolver).removeResolvedArtifact(artifact);
 
         int maxAttempts = 2;

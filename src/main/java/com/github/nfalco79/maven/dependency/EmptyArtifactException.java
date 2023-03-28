@@ -15,6 +15,8 @@
  */
 package com.github.nfalco79.maven.dependency;
 
+import org.apache.maven.artifact.Artifact;
+
 /**
  * A generic exception raised when an error has been reached when the artifact file cannot be read.
  */
@@ -22,27 +24,20 @@ package com.github.nfalco79.maven.dependency;
 public class EmptyArtifactException extends RuntimeException {
 
     /**
-     * Constructs a new exception with the specified detail message and cause.
-     *
-     * @param message
-     *            the detail message (which is saved for later retrieval by the {@link #getMessage()} method).
-     * @param cause
-     *            the cause (which is saved for later retrieval by the {@link #getCause()} method). (A <tt>null</tt> value is permitted, and indicates that the
-     *            cause is nonexistent or unknown.)
+     * Default constructor.
      */
-    public EmptyArtifactException(String message, Throwable cause) {
-        super(message, cause);
+    EmptyArtifactException() {
+        // used internally, never throw to caller
     }
 
     /**
      * Constructs a new exception with the specified detail message. The cause is not initialized, and may subsequently be initialized by a call to
      * {@link #initCause}.
      *
-     * @param message
-     *            the detail message. The detail message is saved for later retrieval by the {@link #getMessage()} method.
+     * @param artifact is not able to resolve.
      */
-    public EmptyArtifactException(String message) {
-        super(message);
+    public EmptyArtifactException(Artifact artifact) {
+        super("Fail to download artifact " + artifact.toString() + ", size is 0");
     }
 
 }

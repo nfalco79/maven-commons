@@ -7,7 +7,7 @@
     </parent>
     <artifactId>maven-commons</artifactId>
     <name>Maven common utilities</name>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
     <url>https://github.com/nfalco79/maven-commons</url>
 
     <issueManagement>
@@ -19,7 +19,7 @@
         <url>https://github.com/nfalco79/maven-commons</url>
         <connection>scm:git:git@github.com:nfalco79/maven-commons.git</connection>
         <developerConnection>scm:git:git@github.com:nfalco79/maven-commons.git</developerConnection>
-        <tag>1.0.1</tag>
+        <tag>1.0.0</tag>
     </scm>
 
     <prerequisites>

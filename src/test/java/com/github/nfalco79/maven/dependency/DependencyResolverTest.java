@@ -40,6 +40,7 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingRequest;
+import org.apache.maven.project.ProjectBuildingRequest.RepositoryMerging;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.apache.maven.shared.dependency.graph.internal.DefaultDependencyNode;
@@ -124,8 +125,10 @@ public class DependencyResolverTest {
     private MavenSession buildMavenSession(MavenProject mavenProject) {
         MavenSession mavenSession = mock(MavenSession.class);
         when(mavenSession.getCurrentProject()).thenReturn(mavenProject);
-        when(mavenSession.getProjectBuildingRequest()).thenReturn(mock(ProjectBuildingRequest.class));
         when(mavenSession.getProjects()).thenReturn(Collections.emptyList());
+        ProjectBuildingRequest projectBuildingrequest = mock(ProjectBuildingRequest.class);
+        when(mavenSession.getProjectBuildingRequest()).thenReturn(projectBuildingrequest);
+        when(projectBuildingrequest.getRepositoryMerging()).thenReturn(RepositoryMerging.POM_DOMINANT);
         return mavenSession;
     }
 
